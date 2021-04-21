@@ -26,9 +26,12 @@ class PostRepository implements PostRepositoryInterface
         return $this->model->findOrFail($id);
     }
 
-    public function findByTitleName($title_name) : Collection
+    public function findByTitleAndArticle($query) : Collection
     {
-        return $this->model->where('title', 'LIKE', "%{$title_name}%");
+        return $this->model->where('title', 'LIKE', "%{$query}%")
+                           ->orWhere('article', 'LIKE', "%{$query}%")
+                           ->get();
+
     }
 
     public function create(array $attributes) : Model

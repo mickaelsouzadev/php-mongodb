@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Repositories\Interfaces\PostRepositoryInterface;
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -17,72 +17,67 @@ class PostController extends Controller
 
     public function index()
     {
-        return $this->postRepository->all();
+        try {
+            return response()->success($this->postRepository->all());
+        } catch (\Exception $e) {
+            return response()->error("Não foi possível carregar os posts");
+        }
+
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        //
+        try {
+            $post = $this->postRepository->create($request->all());
+
+            if ($post) {
+                return response()->success($post, 201);
+            }
+
+            return response()->error("Não foi possível adicionar este post");
+        } catch (\Exception $e) {
+            return response()->error("Ocorreu um erro interno no servidor", 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Post $post)
+    public function show($id)
     {
-        //
+        try {
+            return $this->postRepository->find($id);
+        } catch (ModelNotFoundException $e) {
+            return response()->error("Post não encontrado", 404);
+        } catch (\Exception $e) {
+            return response()->error("Ocorreu um erro interno no servidor", 500);
+        }
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Post $post)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+            $post = $this->postRepository->update($request->all(), $id);
+
+            if ($post) {
+                return response()->success($post);
+            }
+
+            return response()->error("Não foi possível atualizar este post");
+        } catch (\Exception $e) {
+            return response()->error("Ocorreu um erro interno no servidor", 500);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Post $post)
+    public function destroy($id)
     {
-        //
-    }
+        try {
+            if($this->postRepository->delete($id)) {
+                return response()->success(true);
+            }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Post $post)
-    {
-        //
+            return response()->error("Não foi possível remover este post");
+        }catch(\Exception $e) {
+            return response()->error("Ocorreu um erro interno no servidor", 500);
+        }
     }
 }
+
